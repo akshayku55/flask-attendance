@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>CGC Attendance Checker (No User Login)</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; }
+      #attendance, #screenshot { margin-top: 20px; }
+      img { max-width: 100%; height: auto; }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <h1>CGC Attendance Checker</h1>
+    <p>No manual login needed—attendance is retrieved automatically.</p>
+
+    <button id="checkBtn">Check Attendance</button>
+
+    <div id="loading" class="hidden">Loading...</div>
+
+    <div id="attendance" class="hidden">
+      <h2>Total Attendance:</h2>
+      <span id="attendance-value"></span>
+    </div>
+
+    <div id="screenshot" class="hidden">
+      <h2>Screenshot:</h2>
+      <img id="attendance-img" alt="Attendance Screenshot">
+    </div>
+
+    <div id="error" style="color:red;"></div>
+
+    <script>
+      const checkBtn = document.getElementById('checkBtn');
+      const loadingDiv = document.getElementById('loading');
+      const attendanceDiv = document.getElementById('attendance');
+      const screenshotDiv = document.getElementById('screenshot');
+      const errorDiv = document.getElementById('error');
+
+      checkBtn.addEventListener('click', async () => {
+        attendanceDiv.classList.add('hidden');
+        screenshotDiv.classList.add('hidden');
+        errorDiv.textContent = "";
+        loadingDiv.classList.remove('hidden');
+        loadingDiv.textContent = "Retrieving attendance...";
+
+        try {
+          const response = await fetch('/api/attendance');
+          if (!response.ok) {
+            throw new Error("Server error " + response.status);
+          }
+          const data = await response.json();
+          loadingDiv.classList.add('hidden');
+
+          if (data.error) {
+            errorDiv.textContent = "Error: " + data.error;
+            return;
+          }
+
+          // Display attendance
+          document.getElementById('attendance-value').textContent = data.attendance;
+          attendanceDiv.classList.remove('hidden');
+
+          // Display screenshot
+          const attendanceImg = document.getElementById('attendance-img');
+          attendanceImg.src = "data:image/png;base64," + data.screenshot;
+          screenshotDiv.classList.remove('hidden');
+
+        } catch (err) {
+          loadingDiv.classList.add('hidden');
+          errorDiv.textContent = "Error retrieving attendance: " + err;
+        }
+      });
+    </script>
+  </body>
+</html>
